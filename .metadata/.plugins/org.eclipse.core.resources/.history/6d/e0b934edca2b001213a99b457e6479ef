@@ -1,0 +1,33 @@
+public class Listener {
+	
+	public Listen(){
+		try {
+	        Boolean end = false;
+	        ServerSocket ss = new ServerSocket(12345);
+	        while(!end){
+	                //Server is waiting for client here, if needed
+	                Socket s = ss.accept();
+	                BufferedReader input = new BufferedReader(new InputStreamReader(s.getInputStream()));
+	                PrintWriter output = new PrintWriter(s.getOutputStream(),true); //Autoflush
+	                String st = input.readLine();
+	                Log.d("Tcp Example", "From client: "+st);
+	                output.println("Good bye and thanks for all the fish :)");
+	                s.close();
+	                if ( STOPPING conditions){ end = true; }
+	        }
+			ss.close();
+			       
+			       
+			} catch (UnknownHostException e) {
+			        // TODO Auto-generated catch block
+			        e.printStackTrace();
+			} catch (IOException e) {
+			        // TODO Auto-generated catch block
+			        e.printStackTrace();
+			}
+		}
+	
+	public static void main(String[] args){
+		Listen();
+	}
+}
