@@ -20,9 +20,23 @@
 //
 package android.androidVNC;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
 
 import com.antlersoft.android.bc.BCFactory;
 import com.antlersoft.android.dbimpl.ImplementationBase;
@@ -37,7 +51,10 @@ import android.content.DialogInterface.OnDismissListener;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.PointF;
+import android.net.DhcpInfo;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
@@ -520,6 +537,10 @@ public class VncCanvasActivity extends Activity {
 
 	ZoomControls zoomer;
 	Panner panner;
+	
+	DatagramSocket socket;
+	DatagramPacket packet;
+	InetAddress serverAddr;
 
 	@Override
 	public void onCreate(Bundle icicle) {
@@ -531,6 +552,15 @@ public class VncCanvasActivity extends Activity {
 
 		database = new VncDatabase(this);
 
+		try {
+			socket = new DatagramSocket();
+			serverAddr = InetAddress.getByName("10.32.55.74");
+		} catch (SocketException e1) {
+			e1.printStackTrace();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
+		
 		Intent i = getIntent();
 		connection = new ConnectionBean();
 		Uri data = i.getData();
@@ -626,8 +656,8 @@ public class VncCanvasActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				showZoomer(true);
-				vncCanvas.scaling.zoomIn(VncCanvasActivity.this);
-
+//				vncCanvas.scaling.zoomIn(VncCanvasActivity.this);
+				sendMessage("zoomin");
 			}
 
 		});
@@ -664,6 +694,33 @@ public class VncCanvasActivity extends Activity {
 
 		inputHandler = getInputHandlerById(R.id.itemInputFitToScreen);
 	}
+	
+	public void sendMessage(String message){
+		int DISCOVERY_PORT = 1239;
+		packet = new DatagramPacket(message.getBytes(), message.length(),
+				serverAddr, DISCOVERY_PORT);
+		SendMessageTask t = new SendMessageTask();
+		t.execute();
+	}
+	
+	 private class SendMessageTask extends AsyncTask<String, Void, String> {
+	        @Override
+	        protected String doInBackground(String... strs) {
+	        		try {
+						socket.send(packet);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					return null;
+	        }
+	        
+	        @Override
+	        public void onPostExecute(String result){}
+	        
+	    }
+	
+	
 
 	/**
 	 * Set modes on start to match what is specified in the ConnectionBean;
@@ -718,6 +775,7 @@ public class VncCanvasActivity extends Activity {
 	@Override
 	protected void onStop() {
 		vncCanvas.disableRepaints();
+		socket.close();
 		super.onStop();
 	}
 

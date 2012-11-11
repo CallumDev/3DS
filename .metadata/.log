@@ -880,3 +880,6 @@ Binding(CTRL+SHIFT+ARROW_RIGHT,
 		,,true),null),
 	org.eclipse.ui.defaultAcceleratorConfiguration,
 	org.eclipse.jdt.ui.javaEditorScope,,cocoa,system)
+
+!ENTRY org.eclipse.ui 4 4 2012-11-10 23:32:40.248
+!MESSAGE Referenced part does not exist yet: org.eclipse.ui.views.ProblemView.
